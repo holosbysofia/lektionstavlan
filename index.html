@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lektionstavlan</title>
 <style>
-:root{--ink:#173342;--muted:#617984;--bg:#f3f7f6;--teal:#187c80;--soft:#e1f2ef;--gold:#f5c96c;--line:#dce7e5}
+:root{--ink:#173342;--muted:#617984;--bg:#f3f7f6;--teal:#187c80;--soft:#e1f2ef;--line:#dce7e5}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
 button,input,textarea{font:inherit}
@@ -14,9 +14,9 @@ header{background:white;border-bottom:1px solid var(--line);padding:15px 3%;disp
 header h1{margin:0;font-size:24px}
 header small{color:var(--muted)}
 main{max-width:1350px;margin:auto;padding:22px 3%}
-button.primary{background:var(--teal);color:white}
-button.soft{background:var(--soft);color:var(--teal)}
-button.light{background:white;border:1px solid var(--line);color:var(--ink)}
+.primary{background:var(--teal);color:white}
+.soft{background:var(--soft);color:var(--teal)}
+.light{background:white;border:1px solid var(--line);color:var(--ink)}
 .weekbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
 .weekbar input{padding:9px;border:1px solid var(--line);border-radius:9px;background:white}
 .layout{display:grid;grid-template-columns:310px 1fr;gap:18px}
@@ -35,6 +35,8 @@ button.light{background:white;border:1px solid var(--line);color:var(--ink)}
 .prompt.goal{background:var(--soft);grid-column:1/-1}
 .prompt h3{margin:0 0 9px;font-size:16px;color:var(--teal)}
 .prompt p{margin:0;white-space:pre-wrap;line-height:1.45;font-size:18px}
+.links{display:grid;gap:8px}
+.links a{color:var(--teal);font-weight:bold;overflow-wrap:anywhere}
 .timer{margin-top:16px;padding:14px;background:#fff8e8;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 #time{font-size:34px;font-weight:bold;font-variant-numeric:tabular-nums}
 #congrats{text-align:center;color:var(--teal);font-size:22px;font-weight:bold;margin-top:16px}
@@ -46,7 +48,7 @@ form h2{margin:0 0 5px}
 form label{font-weight:bold}
 form input,form textarea{display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--line);border-radius:9px}
 form textarea{min-height:65px;resize:vertical}
-.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:5px}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:5px;flex-wrap:wrap}
 @media(max-width:800px){.layout{grid-template-columns:1fr}.lessonview{min-height:0}}
 @media(max-width:560px){.cards{grid-template-columns:1fr}.prompt.goal{grid-column:auto}.viewhead{display:block}}
 body.projector header,body.projector .weekbar,body.projector .panel{display:none}
@@ -79,7 +81,6 @@ body.projector .lessonview{min-height:90vh}
       <h2>Veckans lektioner</h2>
       <div id="lessonList" class="lessonlist"></div>
     </aside>
-
     <section class="lessonview" id="lessonView"></section>
   </div>
 </main>
@@ -91,15 +92,12 @@ body.projector .lessonview{min-height:90vh}
     <label>Datum
       <input name="date" type="date" required>
     </label>
-
     <label>Tid, om du vill
       <input name="time" type="time">
     </label>
-
     <label>Ämne och lektionsnamn
       <input name="title" placeholder="Till exempel Matematik – bråk" required>
     </label>
-
     <label>Klass eller grupp
       <input name="group" placeholder="Till exempel 6A">
     </label>
@@ -107,25 +105,24 @@ body.projector .lessonview{min-height:90vh}
     <label>Vad är dagens mål?
       <textarea name="goal"></textarea>
     </label>
-
     <label>Vad gjorde vi sist?
       <textarea name="last"></textarea>
     </label>
-
     <label>Vad ska jag göra nu?
       <textarea name="now"></textarea>
     </label>
-
     <label>Hur ska jag göra?
       <textarea name="how"></textarea>
     </label>
-
     <label>Vad gör jag sedan?
       <textarea name="next"></textarea>
     </label>
-
     <label>Vad har jag lärt mig idag?
       <textarea name="learned"></textarea>
+    </label>
+
+    <label>Filmer och länkar – en länk per rad
+      <textarea name="links" placeholder="https://..."></textarea>
     </label>
 
     <div class="actions">
@@ -138,6 +135,7 @@ body.projector .lessonview{min-height:90vh}
 <script>
 const $ = id => document.getElementById(id);
 const STORAGE = "lektionstavlan_weekplan_v1";
+const fields = ["date","time","title","group","goal","last","now","how","next","learned","links"];
 
 let lessons = JSON.parse(localStorage.getItem(STORAGE) || "[]");
 let selectedId = null;
@@ -145,106 +143,100 @@ let editingId = null;
 let timerHandle = null;
 let seconds = 15 * 60;
 
-function mondayOf(dateString){
-  const d = new Date(dateString + "T12:00:00");
-  const day = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - day);
-  return localDateString(d);
-}
-
 function localDateString(date){
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2,"0");
+  const month = String(date.getMonth()+1).padStart(2,"0");
   const day = String(date.getDate()).padStart(2,"0");
-  return year + "-" + month + "-" + day;
+  return year+"-"+month+"-"+day;
+}
+
+function mondayOf(dateString){
+  const date = new Date(dateString+"T12:00:00");
+  date.setDate(date.getDate() - ((date.getDay()+6)%7));
+  return localDateString(date);
+}
+
+function save(){
+  localStorage.setItem(STORAGE,JSON.stringify(lessons));
 }
 
 function changeWeek(amount){
-  const d = new Date($("weekDate").value + "T12:00:00");
-  d.setDate(d.getDate() + amount * 7);
-  $("weekDate").value = mondayOf(localDateString(d));
+  const date = new Date($("weekDate").value+"T12:00:00");
+  date.setDate(date.getDate()+amount*7);
+  $("weekDate").value = mondayOf(localDateString(date));
   selectedId = null;
   render();
 }
 
-function save(){
-  localStorage.setItem(STORAGE, JSON.stringify(lessons));
-}
-
 function currentWeekLessons(){
-  const start = new Date($("weekDate").value + "T00:00:00");
+  const start = new Date($("weekDate").value+"T00:00:00");
   const end = new Date(start);
-  end.setDate(end.getDate() + 7);
+  end.setDate(end.getDate()+7);
 
   return lessons
-    .filter(l => {
-      const d = new Date(l.date + "T12:00:00");
-      return d >= start && d < end;
+    .filter(lesson=>{
+      const date = new Date(lesson.date+"T12:00:00");
+      return date>=start && date<end;
     })
-    .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
+    .sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
 }
 
 function niceDate(dateString){
-  return new Date(dateString + "T12:00:00").toLocaleDateString("sv-SE",{
-    weekday:"long",
-    day:"numeric",
-    month:"long"
+  return new Date(dateString+"T12:00:00").toLocaleDateString("sv-SE",{
+    weekday:"long",day:"numeric",month:"long"
   });
 }
 
 function escapeHtml(value){
-  return String(value || "").replace(/[&<>"']/g, character => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  }[character]));
+  return String(value||"").replace(/[&<>"']/g,char=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[char]));
+}
+
+function safeLinks(text){
+  return String(text||"").split("\n").map(line=>line.trim()).filter(Boolean).map(url=>{
+    if(!/^https?:\/\//i.test(url)){
+      return `<span>${escapeHtml(url)} (länken behöver börja med http:// eller https://)</span>`;
+    }
+    return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+  }).join("");
 }
 
 function render(){
   const week = currentWeekLessons();
 
-  if(!week.some(l => l.id === selectedId)){
+  if(!week.some(lesson=>lesson.id===selectedId)){
     selectedId = week[0]?.id || null;
   }
 
   $("lessonList").innerHTML = week.length
-    ? week.map(l => `
-        <button class="lessonitem ${l.id === selectedId ? "selected" : ""}" data-id="${l.id}">
-          ${escapeHtml(l.title)}
-          <small>${niceDate(l.date)}${l.time ? " · " + l.time : ""}${l.group ? " · " + escapeHtml(l.group) : ""}</small>
-        </button>
-      `).join("")
+    ? week.map(lesson=>`
+      <button class="lessonitem ${lesson.id===selectedId?"selected":""}" data-id="${lesson.id}">
+        ${escapeHtml(lesson.title)}
+        <small>${niceDate(lesson.date)}${lesson.time?" · "+lesson.time:""}${lesson.group?" · "+escapeHtml(lesson.group):""}</small>
+      </button>`).join("")
     : `<p class="empty">Inga lektioner inlagda för den här veckan ännu.<br><br>
        Klicka på <b>Lägg till lektion</b> för att börja.</p>`;
 
-  document.querySelectorAll(".lessonitem").forEach(button => {
-    button.onclick = () => {
-      selectedId = button.dataset.id;
-      render();
-    };
+  document.querySelectorAll(".lessonitem").forEach(button=>{
+    button.onclick=()=>{selectedId=button.dataset.id;render()};
   });
 
-  const lesson = week.find(item => item.id === selectedId);
+  const lesson = week.find(item=>item.id===selectedId);
 
   if(!lesson){
-    $("lessonView").innerHTML = `
-      <div class="empty">
-        <h2>Välj eller lägg till en lektion</h2>
-        <p>När du väljer en lektion visas bara den lektionen här.</p>
-      </div>`;
+    $("lessonView").innerHTML=`<div class="empty"><h2>Välj eller lägg till en lektion</h2>
+      <p>När du väljer en lektion visas bara den lektionen här.</p></div>`;
     return;
   }
 
-  $("lessonView").innerHTML = `
+  $("lessonView").innerHTML=`
     <div class="viewhead">
       <div>
         <h2>${escapeHtml(lesson.title)}</h2>
-        <div class="dateLine">
-          ${niceDate(lesson.date)}
-          ${lesson.time ? " · " + lesson.time : ""}
-          ${lesson.group ? " · " + escapeHtml(lesson.group) : ""}
+        <div class="dateLine">${niceDate(lesson.date)}
+          ${lesson.time?" · "+lesson.time:""}
+          ${lesson.group?" · "+escapeHtml(lesson.group):""}
         </div>
       </div>
       <div class="actions">
@@ -254,53 +246,32 @@ function render(){
     </div>
 
     <div class="cards">
-      <div class="prompt goal">
-        <h3>Vad är dagens mål?</h3>
-        <p>${escapeHtml(lesson.goal) || "—"}</p>
-      </div>
-      <div class="prompt">
-        <h3>Vad gjorde vi sist?</h3>
-        <p>${escapeHtml(lesson.last) || "—"}</p>
-      </div>
-      <div class="prompt">
-        <h3>Vad ska jag göra nu?</h3>
-        <p>${escapeHtml(lesson.now) || "—"}</p>
-      </div>
-      <div class="prompt">
-        <h3>Hur ska jag göra?</h3>
-        <p>${escapeHtml(lesson.how) || "—"}</p>
-      </div>
-      <div class="prompt">
-        <h3>Vad gör jag sedan?</h3>
-        <p>${escapeHtml(lesson.next) || "—"}</p>
-      </div>
-      <div class="prompt">
-        <h3>Vad har jag lärt mig idag?</h3>
-        <p>${escapeHtml(lesson.learned) || "—"}</p>
-      </div>
+      <div class="prompt goal"><h3>Vad är dagens mål?</h3><p>${escapeHtml(lesson.goal)||"—"}</p></div>
+      <div class="prompt"><h3>Vad gjorde vi sist?</h3><p>${escapeHtml(lesson.last)||"—"}</p></div>
+      <div class="prompt"><h3>Vad ska jag göra nu?</h3><p>${escapeHtml(lesson.now)||"—"}</p></div>
+      <div class="prompt"><h3>Hur ska jag göra?</h3><p>${escapeHtml(lesson.how)||"—"}</p></div>
+      <div class="prompt"><h3>Vad gör jag sedan?</h3><p>${escapeHtml(lesson.next)||"—"}</p></div>
+      <div class="prompt"><h3>Vad har jag lärt mig idag?</h3><p>${escapeHtml(lesson.learned)||"—"}</p></div>
+      ${lesson.links ? `<div class="prompt"><h3>Filmer och länkar</h3><div class="links">${safeLinks(lesson.links)}</div></div>` : ""}
     </div>
 
     <div class="timer">
-      <div>
-        <strong>Arbetstid</strong><br>
-        <span id="time">15:00</span>
-      </div>
-      <div>
+      <div><strong>Arbetstid</strong><br><span id="time">15:00</span></div>
+      <div class="actions">
         <button class="light" id="minus">− 1 min</button>
         <button class="primary" id="start">▶ Starta</button>
         <button class="light" id="reset">↻ Börja om</button>
         <button class="light" id="plus">＋ 1 min</button>
       </div>
     </div>
-
     <div id="congrats">Bra jobbat!</div>`;
 
-  $("editBtn").onclick = () => openEditForm(lesson);
+  $("editBtn").onclick=()=>openEditForm(lesson);
 
-  $("deleteBtn").onclick = () => {
+  $("deleteBtn").onclick=()=>{
     if(confirm("Vill du ta bort den här lektionen?")){
-      lessons = lessons.filter(item => item.id !== selectedId);
-      selectedId = null;
+      lessons=lessons.filter(item=>item.id!==selectedId);
+      selectedId=null;
       save();
       render();
     }
@@ -310,133 +281,112 @@ function render(){
 }
 
 function openEditForm(lesson){
-  editingId = lesson.id;
-  $("formTitle").textContent = "Redigera lektion";
-  $("saveBtn").textContent = "Spara ändringar";
+  editingId=lesson.id;
+  $("formTitle").textContent="Redigera lektion";
+  $("saveBtn").textContent="Spara ändringar";
+  const form=$("lessonForm");
 
-  const form = $("lessonForm");
-  for(const key of ["date","time","title","group","goal","last","now","how","next","learned"]){
-    form.elements[key].value = lesson[key] || "";
-  }
+  fields.forEach(field=>{
+    form.elements[field].value=lesson[field]||"";
+  });
 
   $("lessonDialog").showModal();
 }
 
 function openNewForm(){
-  editingId = null;
-  $("formTitle").textContent = "Lägg till lektion";
-  $("saveBtn").textContent = "Spara lektion";
-
+  editingId=null;
+  $("formTitle").textContent="Lägg till lektion";
+  $("saveBtn").textContent="Spara lektion";
   $("lessonForm").reset();
-  $("lessonForm").elements.date.value = $("weekDate").value;
+  $("lessonForm").elements.date.value=$("weekDate").value;
   $("lessonDialog").showModal();
 }
 
 function showTime(){
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  const timeElement = document.getElementById("time");
+  const minutes=Math.floor(seconds/60);
+  const remainder=seconds%60;
+  const timeElement=document.getElementById("time");
 
   if(timeElement){
-    timeElement.textContent =
-      String(minutes).padStart(2,"0") + ":" +
-      String(remainder).padStart(2,"0");
+    timeElement.textContent=String(minutes).padStart(2,"0")+":"+String(remainder).padStart(2,"0");
   }
 }
 
 function setupTimer(){
   clearInterval(timerHandle);
-  timerHandle = null;
-  seconds = 15 * 60;
+  timerHandle=null;
+  seconds=15*60;
   showTime();
 
-  $("start").onclick = () => {
+  $("start").onclick=()=>{
     if(timerHandle){
       clearInterval(timerHandle);
-      timerHandle = null;
-      $("start").textContent = "▶ Fortsätt";
+      timerHandle=null;
+      $("start").textContent="▶ Fortsätt";
       return;
     }
 
-    $("start").textContent = "Ⅱ Pausa";
-    timerHandle = setInterval(() => {
+    $("start").textContent="Ⅱ Pausa";
+    timerHandle=setInterval(()=>{
       seconds--;
       showTime();
 
-      if(seconds <= 0){
+      if(seconds<=0){
         clearInterval(timerHandle);
-        timerHandle = null;
+        timerHandle=null;
         alert("Tiden är slut!");
       }
     },1000);
   };
 
-  $("reset").onclick = () => {
+  $("reset").onclick=()=>{
     clearInterval(timerHandle);
-    timerHandle = null;
-    seconds = 15 * 60;
+    timerHandle=null;
+    seconds=15*60;
     showTime();
-    $("start").textContent = "▶ Starta";
+    $("start").textContent="▶ Starta";
   };
 
-  $("plus").onclick = () => {
-    seconds += 60;
-    showTime();
-  };
-
-  $("minus").onclick = () => {
-    seconds = Math.max(0, seconds - 60);
-    showTime();
-  };
+  $("plus").onclick=()=>{seconds+=60;showTime()};
+  $("minus").onclick=()=>{seconds=Math.max(0,seconds-60);showTime()};
 }
 
-$("addBtn").onclick = openNewForm;
-$("cancelBtn").onclick = () => $("lessonDialog").close();
+$("addBtn").onclick=openNewForm;
+$("cancelBtn").onclick=()=>$("lessonDialog").close();
 
-$("lessonForm").onsubmit = event => {
+$("lessonForm").onsubmit=event=>{
   event.preventDefault();
+  const formData=new FormData(event.target);
+  const lesson={};
 
-  const formData = new FormData(event.target);
-  const updatedLesson = {
-    id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
-    date: formData.get("date"),
-    time: formData.get("time"),
-    title: formData.get("title"),
-    group: formData.get("group"),
-    goal: formData.get("goal"),
-    last: formData.get("last"),
-    now: formData.get("now"),
-    how: formData.get("how"),
-    next: formData.get("next"),
-    learned: formData.get("learned")
-  };
+  fields.forEach(field=>lesson[field]=formData.get(field));
+  lesson.id=editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
 
   if(editingId){
-    const index = lessons.findIndex(item => item.id === editingId);
-    if(index !== -1) lessons[index] = updatedLesson;
+    const index=lessons.findIndex(item=>item.id===editingId);
+    if(index!==-1) lessons[index]=lesson;
   }else{
-    lessons.push(updatedLesson);
+    lessons.push(lesson);
   }
 
-  selectedId = updatedLesson.id;
-  editingId = null;
+  selectedId=lesson.id;
+  editingId=null;
   save();
   $("lessonDialog").close();
   render();
 };
 
-$("prevWeek").onclick = () => changeWeek(-1);
-$("nextWeek").onclick = () => changeWeek(1);
+$("prevWeek").onclick=()=>changeWeek(-1);
+$("nextWeek").onclick=()=>changeWeek(1);
 
-$("weekDate").onchange = () => {
-  $("weekDate").value = mondayOf($("weekDate").value);
-  selectedId = null;
+$("weekDate").onchange=()=>{
+  $("weekDate").value=mondayOf($("weekDate").value);
+  selectedId=null;
   render();
 };
 
-$("fullBtn").onclick = () => {
+$("fullBtn").onclick=()=>{
   document.body.classList.toggle("projector");
-
   if(!document.fullscreenElement){
     document.documentElement.requestFullscreen?.();
   }else{
@@ -444,13 +394,11 @@ $("fullBtn").onclick = () => {
   }
 };
 
-document.addEventListener("fullscreenchange", () => {
-  if(!document.fullscreenElement){
-    document.body.classList.remove("projector");
-  }
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement) document.body.classList.remove("projector");
 });
 
-$("weekDate").value = mondayOf(localDateString(new Date()));
+$("weekDate").value=mondayOf(localDateString(new Date()));
 render();
 </script>
 </body>
