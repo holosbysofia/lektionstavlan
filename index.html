@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lektionstavlan</title>
+<style>
+:root{--ink:#173342;--muted:#617984;--paper:#f4f7f6;--card:#fff;--line:#dce7e5;--teal:#187c80;--teal2:#e1f2ef;--gold:#f5c96c;--shadow:0 12px 32px #18394312}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 3vw;background:#fff;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:42px;height:42px;border-radius:14px;background:var(--teal);display:grid;place-items:center;color:white;font-size:22px;font-weight:700}
+.brand strong{display:block;font-size:18px}
+.brand small{color:var(--muted)}
+.topright{display:flex;align-items:center;gap:22px}
+.clock{text-align:right}
+.clock b{font-size:25px;letter-spacing:.02em}
+.clock span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.topbtn,.secondary,.primary,.iconbtn{border:0;border-radius:12px;padding:11px 15px;font-weight:700}
+.topbtn,.secondary{background:var(--teal2);color:var(--teal)}
+.primary{background:var(--teal);color:white}
+.iconbtn{background:transparent;color:var(--muted);padding:8px}
+main{max-width:1500px;margin:auto;padding:22px 3vw 30px}
+.tabsbar{display:flex;align-items:center;gap:9px;overflow-x:auto;padding:0 0 15px}
+.tab{white-space:nowrap;border:1px solid var(--line);background:#fff;color:var(--muted);padding:11px 17px;border-radius:14px;font-weight:700}
+.tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.addtab{white-space:nowrap;border:1px dashed #91aaa9;background:transparent;color:var(--teal);padding:10px 15px;border-radius:14px;font-weight:700}
+.hero{display:flex;align-items:end;justify-content:space-between;gap:20px;margin:5px 0 17px}
+.hero h1{font-size:clamp(28px,3.5vw,48px);margin:0 0 7px;letter-spacing:-.03em}
+.hero p{margin:0;color:var(--muted);font-size:17px}
+.heroactions{display:flex;gap:10px}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,.8fr);gap:18px}
+.leftcol,.rightcol{display:grid;gap:18px;align-content:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow)}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px}
+.cardhead h2{font-size:19px;margin:0}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--teal);font-weight:800;margin-bottom:8px}
+.objective{background:var(--teal2);border-color:#c5e4df;min-height:155px}
+.objective p{font-size:clamp(22px,2.3vw,32px);font-weight:700;line-height:1.3;margin:0;max-width:950px}
+.editable{outline:none;border-radius:6px}
+.editable:focus{box-shadow:0 0 0 3px #187c8030}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.steps li{display:flex;gap:14px;align-items:flex-start;padding:12px 13px;border-radius:13px;background:#f7f9f8;font-size:18px;line-height:1.35}
+.num{width:29px;height:29px;border-radius:50%;background:var(--gold);display:grid;place-items:center;font-size:14px;font-weight:800;flex:none}
+.steptext{flex:1;min-height:25px}
+.step-tools{display:flex;gap:3px}
+.smallbtn{border:0;background:transparent;color:#819397;font-size:20px;padding:0 5px}
+.timerbox{background:#fff8e8;border-color:#f2e3bf;text-align:center}
+.timer{font-size:clamp(48px,6vw,76px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.04em;margin:4px 0 8px;color:var(--ink)}
+.timerlabel{font-weight:700;font-size:17px;margin-bottom:15px}
+.timercontrols{display:flex;justify-content:center;gap:9px}
+.timercontrols button{padding:10px 15px;border-radius:11px;border:0;font-weight:700}
+.timerstart{background:var(--teal);color:white}
+.timerreset,.timeradjust{background:#fff;border:1px solid var(--line)!important;color:var(--ink)}
+.toolbox{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tool{border:1px solid var(--line);background:#fff;border-radius:15px;padding:14px;text-align:left}
+.tool b{display:block;margin-bottom:4px}
+.tool span{color:var(--muted);font-size:13px}
+.toolresult{margin-top:12px;background:var(--teal2);border-radius:13px;padding:13px;text-align:center;font-size:21px;font-weight:800;min-height:52px;display:none}
+.toolresult.show{display:block}
+.notearea{width:100%;min-height:75px;resize:vertical;border:0;background:#f7f9f8;border-radius:12px;padding:13px;color:var(--ink);line-height:1.4}
+.footerhint{font-size:12px;color:#819397;text-align:center;margin-top:17px}
+dialog{border:0;border-radius:20px;padding:25px;width:min(460px,calc(100% - 28px));box-shadow:0 30px 100px #102c3680;color:var(--ink)}
+dialog::backdrop{background:#102c3670}
+.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.modalhead h2{margin:0}
+.formrow{margin:12px 0}
+.formrow label{display:block;font-weight:700;margin-bottom:6px}
+.formrow input,.formrow textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px}
+.formrow textarea{min-height:130px}
+.modalactions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+@media(max-width:850px){
+  .grid{grid-template-columns:1fr}
+  .rightcol{grid-template-columns:1fr 1fr}
+  .hero{align-items:start;flex-direction:column}
+}
+@media(max-width:560px){
+  header{padding:12px 4vw}
+  .topright{gap:10px}
+  .clock b{font-size:19px}
+  .brand small{display:none}
+  .topbtn{padding:9px;font-size:13px}
+  main{padding:15px 4vw}
+  .card{padding:17px}
+  .rightcol{grid-template-columns:1fr}
+  .heroactions{width:100%}
+  .heroactions button{flex:1}
+}
+body.projector header{padding-top:10px;padding-bottom:10px}
+body.projector main{max-width:none;padding-top:12px}
+.projector .card{padding:18px 22px}
+.projector .steps li{font-size:20px;padding:10px 13px}
+.projector .objective{min-height:120px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="mark">L</div>
+    <div><strong>Lektionstavlan</strong><small>Din lektionsvy på smartboarden</small></div>
+  </div>
+  <div class="topright">
+    <div class="clock"><b id="clock">--:--</b><span id="date"></span></div>
+    <button class="topbtn" id="fullscreenBtn">⛶ Helskärm</button>
+  </div>
+</header>
+
+<main>
+  <nav class="tabsbar" id="tabs" aria-label="Lektioner"></nav>
+
+  <section class="hero">
+    <div>
+      <h1 class="editable" id="lessonTitle" contenteditable="true" spellcheck="false"></h1>
+      <p class="editable" id="lessonSub" contenteditable="true" spellcheck="false"></p>
+    </div>
+    <div class="heroactions">
+      <button class="secondary" id="editLesson">✎ Redigera lektion</button>
+      <button class="primary" id="addStep">＋ Lägg till steg</button>
+    </div>
+  </section>
+
+  <div class="grid">
+    <div class="leftcol">
+      <section class="card objective">
+        <div class="eyebrow">Dagens mål · Vad ska vi lära oss?</div>
+        <p class="editable" id="goal" contenteditable="true"></p>
+      </section>
+
+      <section class="card">
+        <div class="cardhead">
+          <h2>Lektionens steg</h2>
+          <span class="eyebrow" style="margin:0">Vad gör vi?</span>
+        </div>
+        <ol class="steps" id="steps"></ol>
+      </section>
+
+      <section class="card">
+        <div class="cardhead"><h2>Material och kom ihåg</h2></div>
+        <textarea class="notearea" id="notes" placeholder="Skriv material, instruktioner eller något klassen behöver komma ihåg…"></textarea>
+      </section>
+    </div>
+
+    <aside class="rightcol">
+      <section class="card timerbox">
+        <div class="eyebrow">Arbetstid</div>
+        <div class="timer" id="timer">15:00</div>
+        <div class="timerlabel">Ställ in tid och starta timern</div>
+        <div class="timercontrols">
+          <button class="timeradjust" id="minus">− 1 min</button>
+          <button class="timerstart" id="startTimer">▶ Starta</button>
+          <button class="timerreset" id="resetTimer">↻</button>
+          <button class="timeradjust" id="plus">＋ 1 min</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="cardhead"><h2>Välj och dela in</h2></div>
+        <div class="toolbox">
+          <button class="tool" id="pickName"><b>🎲 Slumpa namn</b><span>Välj en elev</span></button>
+          <button class="tool" id="makeGroups"><b>👥 Skapa grupper</b><span>Fördela elever slumpvis</span></button>
+        </div>
+        <div class="toolresult" id="toolresult"></div>
+        <button class="iconbtn" id="editNames" style="margin-top:8px">✎ Lägg in eller ändra elevnamn</button>
+      </section>
+
+      <section class="card">
+        <div class="cardhead"><h2>Avslut</h2></div>
+        <div class="eyebrow">Exit ticket · Vad har jag lärt mig?</div>
+        <p class="editable" id="exit" contenteditable="true" style="font-size:17px;line-height:1.45;margin:0"></p>
+      </section>
+    </aside>
+  </div>
+
+  <div class="footerhint">Klicka på texten för att ändra den. Ändringar sparas automatiskt på den här enheten.</div>
+</main>
+
+<dialog id="lessonDialog">
+  <div class="modalhead">
+    <h2>Redigera lektion</h2>
+    <button class="iconbtn closeDialog" aria-label="Stäng">✕</button>
+  </div>
+  <div class="formrow"><label for="subjectInput">Ämne / lektionsnamn</label><input id="subjectInput" placeholder="Till exempel Matematik – bråk"></div>
+  <div class="formrow"><label for="subtitleInput">Kort beskrivning</label><input id="subtitleInput" placeholder="Lektion 2 · Addition av bråk"></div>
+  <div class="formrow"><label for="goalInput">Dagens mål</label><textarea id="goalInput" placeholder="Efter lektionen ska jag kunna…"></textarea></div>
+  <div class="formrow"><label for="stepsInput">Lektionssteg (en rad per steg)</label><textarea id="stepsInput" placeholder="Startuppgift&#10;Genomgång&#10;Arbeta i par&#10;Exit ticket"></textarea></div>
+  <div class="formrow"><label for="exitInput">Exit ticket</label><input id="exitInput" placeholder="Skriv en fråga som avslutning"></div>
+  <div class="modalactions">
+    <button class="secondary closeDialog">Avbryt</button>
+    <button class="primary" id="saveLesson">Spara lektion</button>
+  </div>
+</dialog>
+
+<dialog id="namesDialog">
+  <div class="modalhead">
+    <h2>Elevnamn</h2>
+    <button class="iconbtn closeDialog" aria-label="Stäng">✕</button>
+  </div>
+  <p style="color:var(--muted);margin-top:0">Skriv ett namn per rad. Namnen sparas bara i webbläsaren på den här enheten.</p>
+  <div class="formrow"><textarea id="namesInput" placeholder="Elev 1&#10;Elev 2&#10;Elev 3"></textarea></div>
+  <div class="modalactions">
+    <button class="secondary closeDialog">Avbryt</button>
+    <button class="primary" id="saveNames">Spara namn</button>
+  </div>
+</dialog>
+
+<script>
+const defaults = [
+  {
+    id:"math", tab:"Matematik", title:"Matematik", sub:"Lektion 1 · Dagens arbete",
+    goal:"Jag kan beskriva hur jag tänker och visa mina lösningar på olika sätt.",
+    steps:["Startuppgift – tänk själv","Genomgång och gemensamma exempel","Arbeta i par och jämför strategier","Avsluta med en exit ticket"],
+    notes:"Ta fram: matematikbok, penna och miniwhiteboard.",
+    exit:"Skriv en sak du förstår bättre nu. Vad vill du öva mer på?"
+  },
+  {
+    id:"no", tab:"NO", title:"NO", sub:"Lektion 1 · Undersök och förklara",
+    goal:"Jag kan använda lektionens begrepp när jag berättar vad jag har upptäckt.",
+    steps:["Fundera: Vad vet jag redan?","Kort genomgång av dagens begrepp","Undersök tillsammans","Dela resultat och förklara"],
+    notes:"Ta fram: skrivhäfte och dagens undersökningsmaterial.",
+    exit:"Vilket nytt begrepp använde du idag? Förklara det med egna ord."
+  },
+  {
+    id:"tech", tab:"Teknik", title:"Teknik", sub:"Lektion 1 · Programmering",
+    goal:"Jag kan följa instruktioner, testa min kod och beskriva vad jag ändrade.",
+    steps:["Logga in och öppna Scratch","Följ dagens programmeringssteg","Testa spelet och felsök","Visa en sak som fungerar"],
+    notes:"Kontrollera att du är inloggad innan du börjar.",
+    exit:"Vad gjorde du när programmet inte fungerade som du tänkt?"
+  }
+];
+
+let data = JSON.parse(localStorage.getItem("lektionsskarm_data") || "null") ||
+  {lessons:defaults, active:"math", names:[]};
+let activeTimer = null;
+let remaining = 15 * 60;
+const $ = id => document.getElementById(id);
+
+function save(){
+  localStorage.setItem("lektionsskarm_data", JSON.stringify(data));
+}
+function lesson(){
+  return data.lessons.find(x => x.id === data.active) || data.lessons[0];
+}
+function esc(s){
+  return String(s || "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+}
+function renderTabs(){
+  $("tabs").innerHTML = data.lessons.map(l =>
+    '<button class="tab '+(l.id === data.active ? "active" : "")+'" data-id="'+l.id+'">'+
+    esc(l.tab || l.title)+'</button>'
+  ).join("") + '<button class="addtab" id="newLesson">＋ Ny lektion</button>';
+
+  document.querySelectorAll(".tab").forEach(b =>
+    b.onclick = () => switchLesson(b.dataset.id)
+  );
+  $("newLesson").onclick = newLesson;
+}
+function render(){
+  const l = lesson();
+  if(!l) return;
+  renderTabs();
+  $("lessonTitle").textContent = l.title;
+  $("lessonSub").textContent = l.sub;
+  $("goal").textContent = l.goal;
+  $("notes").value = l.notes || "";
+  $("exit").textContent = l.exit || "";
+  $("steps").innerHTML = (l.steps || []).map((s,i) =>
+    '<li><span class="num">'+(i+1)+'</span>'+
+    '<span class="steptext editable" contenteditable="true" data-step="'+i+'">'+esc(s)+'</span>'+
+    '<span class="step-tools"><button class="smallbtn" title="Ta bort steg" data-delete="'+i+'">×</button></span></li>'
+  ).join("");
+
+  wireEditable();
+  document.querySelectorAll("[data-delete]").forEach(b =>
+    b.onclick = () => {
+      l.steps.splice(+b.dataset.delete,1);
+      save();
+      render();
+    }
+  );
+}
+function wireEditable(){
+  for(const [id,key] of [
+    ["lessonTitle","title"],["lessonSub","sub"],["goal","goal"],["exit","exit"]
+  ]){
+    $(id).oninput = () => {
+      lesson()[key] = $(id).innerText;
+      save();
+      renderTabs();
+    };
+  }
+  $("notes").oninput = () => {
+    lesson().notes = $("notes").value;
+    save();
+  };
+  document.querySelectorAll("[data-step]").forEach(el =>
+    el.oninput = () => {
+      lesson().steps[+el.dataset.step] = el.innerText;
+      save();
+    }
+  );
+}
+function switchLesson(id){
+  if(activeTimer){
+    clearInterval(activeTimer);
+    activeTimer = null;
+    $("startTimer").textContent = "▶ Starta";
+  }
+  data.active = id;
+  remaining = 15 * 60;
+  showTimer();
+  $("toolresult").classList.remove("show");
+  save();
+  render();
+}
+function newLesson(){
+  const name = prompt("Vad ska den nya lektionen heta?");
+  if(!name || !name.trim()) return;
+  const id = "l" + Date.now();
+  data.lessons.push({
+    id, tab:name.trim(), title:name.trim(), sub:"Ny lektion · Redigera för att fylla i",
+    goal:"Klicka här eller välj Redigera lektion för att skriva dagens mål.",
+    steps:["Starta lektionen","Arbeta med dagens uppgift","Sammanfatta och avsluta"],
+    notes:"", exit:"Vad har du lärt dig?"
+  });
+  data.active = id;
+  save();
+  render();
+}
+
+$("editLesson").onclick = () => {
+  const l = lesson();
+  $("subjectInput").value = l.title;
+  $("subtitleInput").value = l.sub;
+  $("goalInput").value = l.goal;
+  $("stepsInput").value = (l.steps || []).join("\n");
+  $("exitInput").value = l.exit || "";
+  $("lessonDialog").showModal();
+};
+$("saveLesson").onclick = () => {
+  const l = lesson();
+  l.title = $("subjectInput").value || "Lektion";
+  l.tab = l.title.length > 17 ? l.title.slice(0,16) + "…" : l.title;
+  l.sub = $("subtitleInput").value;
+  l.goal = $("goalInput").value;
+  l.steps = $("stepsInput").value.split("\n").map(x => x.trim()).filter(Boolean);
+  l.exit = $("exitInput").value;
+  save();
+  $("lessonDialog").close();
+  render();
+};
+$("addStep").onclick = () => {
+  lesson().steps.push("Nytt lektionssteg – klicka för att skriva");
+  save();
+  render();
+  document.querySelector('[data-step="'+(lesson().steps.length-1)+'"]')?.focus();
+};
+document.querySelectorAll(".closeDialog").forEach(b =>
+  b.onclick = () => b.closest("dialog").close()
+);
+$("editNames").onclick = () => {
+  $("namesInput").value = data.names.join("\n");
+  $("namesDialog").showModal();
+};
+$("saveNames").onclick = () => {
+  data.names = $("namesInput").value.split("\n").map(x => x.trim()).filter(Boolean);
+  save();
+  $("namesDialog").close();
+};
+$("pickName").onclick = () => {
+  const r = $("toolresult");
+  if(!data.names.length){
+    r.textContent = "Lägg in elevnamn först.";
+    r.classList.add("show");
+    return;
+  }
+  r.textContent = "🎲 " + data.names[Math.floor(Math.random()*data.names.length)];
+  r.classList.add("show");
+};
+$("makeGroups").onclick = () => {
+  const r = $("toolresult");
+  if(!data.names.length){
+    r.textContent = "Lägg in elevnamn först.";
+    r.classList.add("show");
+    return;
+  }
+  const n = Number(prompt("Hur många grupper vill du ha?", "4"));
+  if(!n || n < 1) return;
+  const names = [...data.names].sort(() => Math.random() - .5);
+  const groups = Array.from({length:Math.min(n,names.length)}, () => []);
+  names.forEach((x,i) => groups[i % groups.length].push(x));
+  r.innerHTML = groups.map((g,i) =>
+    "<div style='font-size:14px;margin:4px'><b>Grupp "+(i+1)+":</b> "+
+    g.map(esc).join(", ")+"</div>"
+  ).join("");
+  r.classList.add("show");
+};
+function showTimer(){
+  const m = Math.floor(remaining/60), s = remaining%60;
+  $("timer").textContent = String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+$("startTimer").onclick = () => {
+  if(activeTimer){
+    clearInterval(activeTimer);
+    activeTimer = null;
+    $("startTimer").textContent = "▶ Fortsätt";
+    return;
+  }
+  if(remaining <= 0) remaining = 15 * 60;
+  $("startTimer").textContent = "Ⅱ Pausa";
+  activeTimer = setInterval(() => {
+    remaining--;
+    showTimer();
+    if(remaining <= 0){
+      clearInterval(activeTimer);
+      activeTimer = null;
+      $("startTimer").textContent = "▶ Starta";
+      $("timer").textContent = "00:00";
+      if("Notification" in window && Notification.permission === "granted"){
+        new Notification("Tiden är slut!");
+      }else{
+        alert("Tiden är slut!");
+      }
+    }
+  },1000);
+};
+$("resetTimer").onclick = () => {
+  clearInterval(activeTimer);
+  activeTimer = null;
+  remaining = 15 * 60;
+  $("startTimer").textContent = "▶ Starta";
+  showTimer();
+};
+$("plus").onclick = () => { remaining += 60; showTimer(); };
+$("minus").onclick = () => { remaining = Math.max(0,remaining-60); showTimer(); };
+$("fullscreenBtn").onclick = () => {
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+};
+document.addEventListener("fullscreenchange", () =>
+  document.body.classList.toggle("projector",!!document.fullscreenElement)
+);
+function time(){
+  const d = new Date();
+  $("clock").textContent = d.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
+  $("date").textContent = d.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
+}
+time();
+setInterval(time,1000);
+render();
+showTimer();
+</script>
+</body>
+</html>
